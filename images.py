@@ -1,6 +1,8 @@
 import cv2
 from skimage import data
 
+# Para testes
+
 # Da biblioteca
 img_coffee = data.coffee()
 img_astro = data.astronaut()

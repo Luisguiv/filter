@@ -1,8 +1,9 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+import imutils
 
-def apply_threshold_filter(image, threshold_value=64):
+def apply_threshold_filter(image, threshold_value):
     # Lê a imagem em escala de cinza
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     
@@ -14,22 +15,22 @@ def apply_threshold_filter(image, threshold_value=64):
 def apply_greyscale_filter(img):
     return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-def apply_high_pass_filter(img):
-    # Converte a imagem para escala de cinza (se não estiver em escala de cinza)
-    if len(img.shape) == 3:
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    
-    # Aplica o filtro Laplaciano
-    laplacian_filter = cv2.Laplacian(img, cv2.CV_64F)
-    
-    # Normaliza o resultado para valores no intervalo de 0 a 255
-    laplacian_filter = cv2.normalize(laplacian_filter, None, 0, 255, cv2.NORM_MINMAX, cv2.CV_8U)
-    
-    return laplacian_filter
+def apply_high_pass_filter_basic(img):
+    return img - cv2.GaussianBlur(img, (21, 21), 3)+127
 
-def apply_low_pass_filter(img, ksize=(5, 5)):
-    # Aplica o filtro Gaussiano
-    return cv2.GaussianBlur(img, ksize, 0)
+def apply_high_pass_filter_boost(img, boost_factor):
+    hipass = img - cv2.GaussianBlur(img, (7, 7), 3)+127
+    hiboost = cv2.addWeighted(img, boost_factor, hipass, -1, 0)
+
+    return hiboost
+
+def apply_low_pass_filter_mean(img, kernel):
+    kernel = int(kernel)
+    return cv2.boxFilter(img, -1, (kernel,kernel))
+
+def apply_low_pass_filter_median(img, kernel):
+    kernel = int(kernel)
+    return cv2.medianBlur(img,kernel)
 
 def apply_roberts_filter(image):
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -125,7 +126,7 @@ def apply_canny_filter(image, low_threshold, high_threshold): # l=50 h=150
 
     return edges
 
-def add_salt_and_pepper_noise(image, amount=0.2):
+def add_salt_and_pepper_noise(image, amount):
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     
     # Cria uma máscara de ruído "salt and pepper"
@@ -192,6 +193,23 @@ def equalize_histogram(img):
     equalized_img = cv2.equalizeHist(img)
     
     return equalized_img
+
+def count_objects(image):
+    gray_scaled = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    thresh = cv2.threshold(gray_scaled, 225,225, cv2.THRESH_BINARY_INV)[1]
+
+    contours = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours = imutils.grab_contours(contours)
+
+    output = image.copy()
+    for contour in contours:
+        cv2.drawContours(output, [contour], -1,(240,0,159),3)
+
+    text = "Tem {} objetos na imagem".format(len(contours))
+    cv2.putText(output, text, (10,25), cv2.FONT_HERSHEY_SIMPLEX, 0.7,(240, 0, 159), 2)
+
+    return output
 
 def adjust_gamma(image, gamma): # gamma = 3.5
     invGamma = 1.0 / gamma
