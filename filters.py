@@ -3,17 +3,26 @@ import numpy as np
 import matplotlib.pyplot as plt
 import imutils
 
+def is_greyscale(image):
+    if len(image.shape) != 3:  # Se a imagem não tem 3 canais (altura, largura, canais)
+        return False
+    
+    # Verificar se os canais R, G e B são iguais
+    return np.all(image[:, :, 0] == image[:, :, 1]) and np.all(image[:, :, 0] == image[:, :, 2])
+
+def apply_greyscale_filter(img):
+    return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
 def apply_threshold_filter(image, threshold_value):
     # Lê a imagem em escala de cinza
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    if not is_greyscale(image):
+       image = apply_greyscale_filter(image)
     
     # Aplica limiarização binária invertida
     _, thresh = cv2.threshold(image, threshold_value, 255, cv2.THRESH_BINARY_INV)
     
     return thresh
 
-def apply_greyscale_filter(img):
-    return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
 def apply_high_pass_filter_basic(img):
     return img - cv2.GaussianBlur(img, (21, 21), 3)+127
@@ -33,7 +42,8 @@ def apply_low_pass_filter_median(img, kernel):
     return cv2.medianBlur(img,kernel)
 
 def apply_roberts_filter(image):
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    if not is_greyscale(image):
+       image = apply_greyscale_filter(image)
 
     # Define os kernels do operador de Roberts
     roberts_kernel_x = np.array([[1, 0], [0, -1]])
@@ -52,7 +62,8 @@ def apply_roberts_filter(image):
     return roberts_normalized
 
 def apply_prewitt_filter(image):
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    if not is_greyscale(image):
+       image = apply_greyscale_filter(image)
 
     # Define os kernels do operador de Prewitt
     prewitt_kernel_x = np.array([[-1, 0, 1], [-1, 0, 1], [-1, 0, 1]])
@@ -71,7 +82,8 @@ def apply_prewitt_filter(image):
     return prewitt_normalized
 
 def apply_sobel_filter(image):
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    if not is_greyscale(image):
+       image = apply_greyscale_filter(image)
 
     # Aplica o filtro Sobel na direção x
     sobel_x = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=3)
@@ -88,7 +100,8 @@ def apply_sobel_filter(image):
     return sobel_normalized
 
 def apply_log_filter(image):
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    if not is_greyscale(image):
+       image = apply_greyscale_filter(image)
     # Aplicar suavização Gaussiana
     blurred = cv2.GaussianBlur(image, (5, 5), 0)
     
@@ -119,7 +132,8 @@ def find_zero_crossings(log_image):
     return zero_crossings
 
 def apply_canny_filter(image, low_threshold, high_threshold): # l=50 h=150
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    if not is_greyscale(image):
+       image = apply_greyscale_filter(image)
     
     # Aplica o filtro Canny
     edges = cv2.Canny(image, low_threshold, high_threshold)
@@ -127,7 +141,8 @@ def apply_canny_filter(image, low_threshold, high_threshold): # l=50 h=150
     return edges
 
 def add_salt_and_pepper_noise(image, amount):
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    if not is_greyscale(image):
+       image = apply_greyscale_filter(image)
     
     # Cria uma máscara de ruído "salt and pepper"
     num_salt = np.ceil(amount * image.size * 0.5)
@@ -143,7 +158,8 @@ def add_salt_and_pepper_noise(image, amount):
     return image
 
 def apply_watershed_filter(img):
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    if not is_greyscale(img):
+       gray = apply_greyscale_filter(img)
     
     # Detecção de bordas usando o Canny
     ret, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
@@ -173,8 +189,9 @@ def apply_watershed_filter(img):
 
     return img
 
-def plot_histogram(img):
-    image = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+def plot_histogram(image):
+    if not is_greyscale(image):
+       image = apply_greyscale_filter(image)
 
     # Calcula o histograma da imagem
     hist = cv2.calcHist([image], [0], None, [256], [0,256])
@@ -186,16 +203,18 @@ def plot_histogram(img):
     plt.ylabel('Frequência')
     plt.show()
 
-def equalize_histogram(img):
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+def equalize_histogram(image):
+    if not is_greyscale(image):
+       image = apply_greyscale_filter(image)
     
     # Equalizar o histograma
-    equalized_img = cv2.equalizeHist(img)
+    equalized_img = cv2.equalizeHist(image)
     
     return equalized_img
 
 def count_objects(image):
-    gray_scaled = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    if not is_greyscale(image):
+       gray_scaled = apply_greyscale_filter(image)
 
     thresh = cv2.threshold(gray_scaled, 225,225, cv2.THRESH_BINARY_INV)[1]
 
@@ -212,6 +231,9 @@ def count_objects(image):
     return output
 
 def adjust_gamma(image, gamma): # gamma = 3.5
+    if not is_greyscale(image):
+       image = apply_greyscale_filter(image)
+
     invGamma = 1.0 / gamma
     table = np.array([((i / 255.0) ** invGamma) * 255
         for i in np.arange(0, 256)]).astype("uint8")

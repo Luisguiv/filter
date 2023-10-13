@@ -12,7 +12,7 @@ def main(page: ft.Page):
     page.vertical_alignment = ft.MainAxisAlignment.START
     page.horizontal_alignment = ft.CrossAxisAlignment.START
     page.window_width = 560
-    page.window_height = 660
+    page.window_height = 690
 
     def read_dialog(message):
         return simpledialog.askfloat("Input", message)
@@ -24,6 +24,9 @@ def main(page: ft.Page):
         f_types = [('Jpg Files', '*.jpg')]
         filename = filedialog.askopenfilename(filetypes=f_types)
         cv2.imwrite('./original.jpg', cv2.imread(filename))
+
+    def set_img():
+        cv2.imwrite('./original.jpg', cv2.imread('./filtered.jpg'))
 
     def write_filtered(img):
         cv2.imwrite('./filtered.jpg', img)
@@ -48,16 +51,28 @@ def main(page: ft.Page):
                         ink=True,
                     ),
                     ft.Container(
-                        content=ft.Text("Carregar imagem"),
+                        content=ft.Icon(name=ft.icons.FILE_UPLOAD),
                         margin=1,
                         padding=10,
                         alignment=ft.alignment.center,
                         bgcolor=ft.colors.PURPLE_400,
-                        width=150,
+                        width=70,
                         height=60,
                         border_radius=10,
                         ink=True,
                         on_click=lambda e: get_new_img(),
+                    ),
+                    ft.Container(
+                        content=ft.Icon(name=ft.icons.FILE_DOWNLOAD),
+                        margin=1,
+                        padding=10,
+                        alignment=ft.alignment.center,
+                        bgcolor=ft.colors.PURPLE_400,
+                        width=70,
+                        height=60,
+                        border_radius=10,
+                        ink=True,
+                        on_click=lambda e: set_img(),
                     ),
                 ],
             ),
